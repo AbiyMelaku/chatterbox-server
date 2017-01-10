@@ -11,6 +11,10 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+//this is the object with the results array in it
+var body = {
+  results: []
+};
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -31,7 +35,7 @@ var requestHandler = function(request, response) {
 
   // The outgoing status.
   var statusCode = 200;
-  var defaultCorsHeaders;
+  //var defaultCorsHeaders;
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -44,16 +48,12 @@ var requestHandler = function(request, response) {
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
   // response.end() will be the body of the response - i.e. what shows
   // up in the browser.
-//this is the object with the results array in it
-  var body = {
-    results: []
-  };
 
 //function that does the response
   var createResponse = function(statusCode, headers, body) {
@@ -61,31 +61,26 @@ var requestHandler = function(request, response) {
     response.end(JSON.stringify(body));
   };
 
-  var temp = '';
 
-  if (request.url.indexOf('/classes/messages') !== -1) {
+  if (request.url.indexOf('/classes/messages') !== -1 || request.url.indexOf('/classes/room') !== -1) {
     if (request.method === 'GET') {
+      console.log('GET', body.results);
       createResponse(statusCode, headers, body);    
-    }
-    if (request.method === 'POST') {
-      request.on('data', (chunk) => {
+    } else if (request.method === 'POST') {
+      request.on('data', function(chunk) {
         statusCode = 201;
         var parsed = JSON.parse(chunk);
-        //console.log('parsed chunk === ', parsed);
-        // console.log('message property in parsed === ', parsed.message);
+        console.log('PARSED', parsed.message);
         body.results.push(parsed);
-        console.log('this is the result after push ===', body.results);
         createResponse(statusCode, headers, body);
       });
-      //createResponse(statusCode, headers, body);
-
     }
   } else {
     createResponse(404, headers, body);
   }
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end();
+  // response.end();
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
